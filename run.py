@@ -21,7 +21,7 @@ from allennlp.training.trainer import Trainer
 from allennlp.training import GradientDescentTrainer
 from allennlp.common.util import JsonDict
 from allennlp.predictors import Predictor
-import argparse, re
+import argparse, re, os
 
 parser = argparse.ArgumentParser(description='arg of model.')
 parser.add_argument('--batch_size', type=int, default=8)
@@ -146,6 +146,8 @@ if __name__== '__main__':
     if args.mode=='train':
         trainer.train()
     if args.mode=='pred':
+        ckpt = torch.load(os.path.join(serialization_dir, "best.th"))
+        model.load_state_dict(ckpt)
         predictor = PuncPredictor(model, dataset_reader)
         sentences = ['长龙骨黄耆学名是豆科黄芪属的植物。分布在天山、哈萨克斯坦、中亚以及中国大陆的新疆等地，生长于海拔米的地区，一般生长在草坡或荒闲地，目前尚未由人工引种栽培。',
                      '杏林觉醒建议由一些具公信力的专业机构，例如大律师公会作提名，特首选择接纳与否，担心会打破医委会的平衡。',
