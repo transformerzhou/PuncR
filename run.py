@@ -145,7 +145,7 @@ if __name__== '__main__':
     dev_loader.index_with(vocab)
 
     serialization_dir = "./save"
-    trainer = build_trainer(model, serialization_dir, train_loader, dev_loader)
+    trainer = build_trainer(model.cuda(), serialization_dir, train_loader, dev_loader)
     if args.mode=='train':
         trainer.train()
     if args.mode=='pred':
