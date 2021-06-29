@@ -29,6 +29,8 @@ parser.add_argument('--threshold', type=float, default=0.9)
 parser.add_argument('--bert_name', type=str, default="hfl/chinese-bert-wwm")
 parser.add_argument('--save_dir', type=str, default="./save")
 parser.add_argument('--mode', type=str, default="train")
+parser.add_argument('--text_num', type=int, default="50000")
+
 
 args = parser.parse_args()
 
@@ -43,7 +45,7 @@ class PuncPredictor(Predictor):
 def build_dataset_reader() -> DatasetReader:
     tokenizer = PretrainedTransformerTokenizer(model_name)
     token_indexer = {'tokens': PretrainedTransformerIndexer(model_name)}
-    return PuncRestoreReader(tokenizer, token_indexer)
+    return PuncRestoreReader(tokenizer, token_indexer, text_num=text_num)
 
 
 def build_vocab(instances: Iterable[Instance]) -> Vocabulary:
@@ -123,6 +125,7 @@ if __name__== '__main__':
     model_name = args.bert_name
     threshold = args.threshold
     batch_size = args.batch_size
+    text_num = args.text_num
     punc_dic = {'，','。','；','？','！'}
 
     dataset_reader = build_dataset_reader()

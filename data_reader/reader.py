@@ -14,6 +14,7 @@ class PuncRestoreReader(DatasetReader):
             tokenizer: Tokenizer = None,
             token_indexers: Dict[str, TokenIndexer] = None,
             max_tokens: int = None,
+            text_num: int = 500000,
             **kwargs
     ):
         super().__init__(manual_distributed_sharding=True,
@@ -23,6 +24,7 @@ class PuncRestoreReader(DatasetReader):
         self.token_indexers = token_indexers or {"tokens": SingleIdTokenIndexer()}
         self.max_tokens = max_tokens
         self.punc_dic = {'，','。','；','？','！'}
+        self.text_num = text_num
 
     def text_to_instance(self, text: str) -> Instance:
         #         tokens = self.tokenizer.tokenize(text)
@@ -37,7 +39,7 @@ class PuncRestoreReader(DatasetReader):
 
     def _read(self, file_path: str) -> Iterable[Instance]:
         with open(file_path, encoding='utf8') as lines:
-            for line in tqdm(lines.readlines()[:500000]):
+            for line in tqdm(lines.readlines()[:self.text_num]):
                 yield self.text_to_instance(line.strip())
 
     def text_process(self, text):
