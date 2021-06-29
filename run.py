@@ -19,15 +19,26 @@ from allennlp.modules.token_embedders import Embedding, PretrainedTransformerEmb
 from allennlp.training.optimizers import HuggingfaceAdamWOptimizer
 from allennlp.training.trainer import Trainer
 from allennlp.training import GradientDescentTrainer
-import argparse
+from allennlp.common.util import JsonDict
+from allennlp.predictors import Predictor
+import argparse, re
 
 parser = argparse.ArgumentParser(description='arg of model.')
 parser.add_argument('--batch_size', type=int, default=8)
 parser.add_argument('--threshold', type=float, default=0.9)
 parser.add_argument('--bert_name', type=str, default="hfl/chinese-bert-wwm")
 parser.add_argument('--save_dir', type=str, default="./save")
+parser.add_argument('--mode', type=str, default="train")
 
 args = parser.parse_args()
+
+class PuncPredictor(Predictor):
+    def predict(self, sentence: str) -> JsonDict:
+        return self.predict_json({"sentence": sentence})
+
+    def _json_to_instance(self, json_dict: JsonDict) -> Instance:
+        sentence = json_dict["sentence"]
+        return self._dataset_reader.text_to_instance(sentence)
 
 def build_dataset_reader() -> DatasetReader:
     tokenizer = PretrainedTransformerTokenizer(model_name)
@@ -87,12 +98,31 @@ def build_trainer(
     )
     return trainer
 
+def get_punc(query, predictor):
+    """获取句子标签"""
+    pred = predictor.predict(query)['probs'][1:-1]
+    pun_sentence = [token + '，' if tag == 1 else token for token, tag in zip(list(query), pred)]
+    #     print(pun_sentence)
+    if pun_sentence[-1][-1] == '，':
+        pun_sentence[-1] = pun_sentence[-1].replace('，', '。')
+    else:
+        pun_sentence.append('。')
+
+    return ''.join(pun_sentence)
+
+def test_punc(sentence):
+    """对比原句和模型预测的句子"""
+    r = "[，。；？！]"
+    no_punc_sentence = re.sub(r, '', sentence)
+    #     print(no_punc_sentence)
+    punc_sentence = get_punc(no_punc_sentence, predictor)
+
+    print(sentence, punc_sentence, sep='\n')
+
 if __name__== '__main__':
     model_name = args.bert_name
     threshold = args.threshold
     batch_size = args.batch_size
-    print(batch_size)
-    input()
     punc_dic = {'，','。','；','？','！'}
 
     dataset_reader = build_dataset_reader()
@@ -112,7 +142,17 @@ if __name__== '__main__':
     dev_loader.index_with(vocab)
 
     serialization_dir = "./save"
-    # if not os.path.exists(serialization_dir):
-    #     os.mkdir(serialization_dir)
     trainer = build_trainer(model, serialization_dir, train_loader, dev_loader)
-    trainer.train()
+    if args.mode=='train':
+        trainer.train()
+    if args.mode=='pred':
+        predictor = PuncPredictor(model, dataset_reader)
+        sentences = ['长龙骨黄耆学名是豆科黄芪属的植物。分布在天山、哈萨克斯坦、中亚以及中国大陆的新疆等地，生长于海拔米的地区，一般生长在草坡或荒闲地，目前尚未由人工引种栽培。',
+                     '杏林觉醒建议由一些具公信力的专业机构，例如大律师公会作提名，特首选择接纳与否，担心会打破医委会的平衡。',
+                     '沈家坑水库是中华人民共和国浙江省舟山市岱山县长涂镇境内的一座水库。。',
+                     '在纵向不一致模型中，同卵双胞胎之间的差异能够被用于研究在时间点时性状之间的差异路径，然后检测各个明确假设，如一个个体与另一个体相比在性状上的数值盈余会导致其同一性状在未来的额外增量路径和或者另一方面也是很重要的一方面对其他性状的额外增亮路径和。在本例中关于抑郁症患者的运动量低于人群平均水平，其二者的关联是有因果关系的假设，能够被成功验证。如果运动能够缓解抑郁症，那么路径应该是显著的，即双胞胎中运动量更大的那个，抑郁程度应该更轻。',
+                     '通常认为公司的财务现状被公布后，信息应当很快被投资者消化并反映在市场价格中。然而，长久以来被注意到，实际情况并非如此。对于那些获得了季度性较高利润的公司，他们的超额资产回报倾向于在公布盈利额度后向该方向再漂移至少六十天。类似地，报告较差的公司同样倾向于向不利方向漂移同样长的时间。这种现象被称为盈余惯性。',
+                     '叙利亚军队多次试图进入该城，但黎巴嫩安全部队站在路上阻止叙利亚军队进城。']
+
+        for sentence in sentences:
+            test_punc(sentence)
