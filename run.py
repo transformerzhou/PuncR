@@ -19,6 +19,15 @@ from allennlp.modules.token_embedders import Embedding, PretrainedTransformerEmb
 from allennlp.training.optimizers import HuggingfaceAdamWOptimizer
 from allennlp.training.trainer import Trainer
 from allennlp.training import GradientDescentTrainer
+import argparse
+
+parser = argparse.ArgumentParser(description='arg of model.')
+parser.add_argument('--batch_size', type=int, default=8)
+parser.add_argument('--threshold', type=float, default=0.9)
+parser.add_argument('--bert_name', type=str, default="hfl/chinese-bert-wwm")
+parser.add_argument('--save_dir', type=str, default="./save")
+
+args = parser.parse_args()
 
 def build_dataset_reader() -> DatasetReader:
     tokenizer = PretrainedTransformerTokenizer(model_name)
@@ -51,7 +60,7 @@ def build_data_loaders(
         train_data: List[Instance],
         dev_data: List[Instance],
 ) -> Tuple[DataLoader, DataLoader]:
-    train_loader = SimpleDataLoader(train_data, 8, shuffle=True)
+    train_loader = SimpleDataLoader(train_data, batch_size, shuffle=True)
     dev_loader = SimpleDataLoader(dev_data, 8, shuffle=False)
     return train_loader, dev_loader
 
@@ -79,8 +88,13 @@ def build_trainer(
     return trainer
 
 if __name__== '__main__':
-    model_name = 'hfl/chinese-bert-wwm'
+    model_name = args.bert_name
+    threshold = args.threshold
+    batch_size = args.batch_size
+    print(batch_size)
+    input()
     punc_dic = {'，','。','；','？','！'}
+
     dataset_reader = build_dataset_reader()
     train_data, dev_data = read_data(dataset_reader)
 
