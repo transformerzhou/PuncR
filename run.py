@@ -61,7 +61,7 @@ def build_model(vocab: Vocabulary) -> Model:
 
 def read_data(reader: DatasetReader) -> Tuple[List[Instance], List[Instance]]:
     print("Reading data")
-    data = list(reader.read(file_path="cleanwiki.txt"))
+    data = list(reader.read(file_path="./data/cleanwiki.txt"))
     training_data, validation_data = train_test_split(data, test_size=0.1)
 
     return training_data, validation_data
@@ -92,7 +92,7 @@ def build_trainer(
         num_epochs=100,
         optimizer=optimizer,
         cuda_device=cuda_device,
-        distributed=True,
+        # distributed=True,
         patience=5,
         world_size=2,
     )
