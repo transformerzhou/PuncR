@@ -37,7 +37,7 @@ class PuncRestoreReader(DatasetReader):
 
     def _read(self, file_path: str) -> Iterable[Instance]:
         with open(file_path, encoding='utf8') as lines:
-            for line in tqdm(lines.readlines()[:10000]):
+            for line in tqdm(lines.readlines()[:500000]):
                 yield self.text_to_instance(line.strip())
 
     def text_process(self, text):
