@@ -61,17 +61,19 @@ class PuncRestoreLabeler(Model):
     ) -> Dict[str, torch.Tensor]:
         mask = text['tokens']['mask']
         # Shape: (batch_size, num_tokens, embedding_dim)
-        encoded_text = self.encoder(text)
+        encoded_text = self.encoder(text) #BERT输出
         logits1 = self.classifier(encoded_text)
-
         logits2 = torch.squeeze(logits1, dim=-1)
-        probs = torch.sigmoid(logits2)
+        probs = torch.sigmoid(logits2)#计算每个token的得分
+        #阈值
         th = 0.95
+        #大于阈值的为断句点
         probs[torch.where(probs > th)] = 1
         probs[torch.where(probs <= th)] = 0
         output = {"probs": probs}
         if label is not None:
             self.f1(probs, label)
+            #mask加权Loss
             output["loss"] = (torch.nn.functional.binary_cross_entropy_with_logits(logits2, label.float(),
                                                                                    reduction='none') * mask).sum() / (
                                          mask.sum() + 1e-9)

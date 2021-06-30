@@ -43,6 +43,7 @@ class PuncRestoreReader(DatasetReader):
                 yield self.text_to_instance(line.strip())
 
     def text_process(self, text):
+        """每个截断点前一个token打上[SEG]的标签"""
         tokens = self.tokenizer.tokenize(text)
         new_tokens = [tokens[0]]
         labels = ["&&"]
