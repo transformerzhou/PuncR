@@ -21,6 +21,7 @@ from allennlp.training.trainer import Trainer
 from allennlp.training import GradientDescentTrainer
 from allennlp.common.util import JsonDict
 from allennlp.predictors import Predictor
+from allennlp.training.learning_rate_schedulers.learning_rate_scheduler import  StepLearningRateScheduler
 import argparse, re, os
 
 parser = argparse.ArgumentParser(description='arg of model.')
@@ -92,8 +93,10 @@ def build_trainer(
         data_loader=train_loader,
         validation_data_loader=dev_loader,
         num_epochs=100,
-        optimizer=optimizer,
+        # optimizer=optimizer,
         cuda_device=cuda_device,
+        grad_norm=True,
+        learning_rate_scheduler=StepLearningRateScheduler(optimizer, step_size=1000),
         # distributed=True,
         patience=5,
         world_size=1,
@@ -126,6 +129,7 @@ if __name__== '__main__':
     threshold = args.threshold
     batch_size = args.batch_size
     text_num = args.text_num
+    serialization_dir = args.save_dir
     punc_dic = {'，','。','；','？','！'}
 
     dataset_reader = build_dataset_reader()
@@ -144,7 +148,7 @@ if __name__== '__main__':
     train_loader.index_with(vocab)
     dev_loader.index_with(vocab)
 
-    serialization_dir = "./save"
+
     trainer = build_trainer(model.cuda(), serialization_dir, train_loader, dev_loader)
     if args.mode=='train':
         trainer.train()
