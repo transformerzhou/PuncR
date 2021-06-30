@@ -66,7 +66,7 @@ class PuncRestoreLabeler(Model):
 
         logits2 = torch.squeeze(logits1, dim=-1)
         probs = torch.sigmoid(logits2)
-        th = 0.5
+        th = 0.95
         probs[torch.where(probs > th)] = 1
         probs[torch.where(probs <= th)] = 0
         output = {"probs": probs}

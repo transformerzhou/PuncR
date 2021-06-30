@@ -41,6 +41,7 @@ def filter_simple(text):
 
 
 def clean(text):
+    """去掉重复的标点"""
     res = []
     for i in range(len(text)):
         if i > 0 and text[i] == text[i - 1] and text[i] in punc_dic:

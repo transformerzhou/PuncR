@@ -96,7 +96,7 @@ def build_trainer(
         cuda_device=cuda_device,
         # distributed=True,
         patience=5,
-        world_size=2,
+        world_size=1,
     )
     return trainer
 
